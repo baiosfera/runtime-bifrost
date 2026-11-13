@@ -24,10 +24,8 @@ zerops:
         PG_USER: ${database_user}
         PG_PASSWORD: ${database_password}
         PG_DATABASE: ${database_dbName}
-        FREELLMAPI_CLIENT_KEY: ${FREELLMAPI_CLIENT_KEY}
-        DEEPSEEK_PRO_KEY: ${DEEPSEEK_PRO_KEY}
-        BIFROST_MASTER_VK: ${BIFROST_MASTER_VK}
-      start: /usr/local/bin/bifrost -app-dir /var/www -port 8080 -host 0.0.0.0
+        DEEPSEEK_PRO_KEY: ${DEEPSEEK_API_KEY}
+      start: sh -c 'until nc -z "$PG_HOST" "$PG_PORT"; do sleep 1; done; exec /usr/local/bin/bifrost -app-dir /var/www -port 8080 -host 0.0.0.0'
       healthCheck:
         httpGet:
           port: 8080
