@@ -1,0 +1,31 @@
+zerops:
+  - setup: bifrost
+    build:
+      base: alpine/go@1.22
+      buildCommands:
+        - bash setup.sh /var/www/bin
+      deployFiles:
+        - .
+      cache:
+        - bin
+    run:
+      base: alpine/go@1.22
+      ports:
+        - port: 8080
+          httpSupport: true
+      initCommands:
+        - sudo mkdir -p /var/log /run && sudo chmod -R 777 /var/log /run
+        - test -f /usr/local/bin/bifrost || (test -f /var/www/bin/bifrost && sudo cp /var/www/bin/bifrost /usr/local/bin/bifrost && sudo chmod +x /usr/local/bin/bifrost) || (bash /var/www/setup.sh /usr/local/bin)
+      envVariables:
+        PORT: "8080"
+        HOST: "0.0.0.0"
+        PG_HOST: ${database_hostname}
+        PG_PORT: ${database_port}
+        PG_USER: ${database_user}
+        PG_PASSWORD: ${database_password}
+        PG_DATABASE: ${database_dbName}
+      start: /usr/local/bin/bifrost -app-dir /var/www -port 8080 -host 0.0.0.0
+      healthCheck:
+        httpGet:
+          port: 8080
+          path: /health
