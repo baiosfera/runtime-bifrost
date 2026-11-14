@@ -39,4 +39,4 @@ else
 fi
 
 echo "==> [Bifrost Setup] Successfully installed bifrost to ${TARGET_DIR}/bifrost"
-"${TARGET_DIR}/bifrost" -version || true
+ls -lh "${TARGET_DIR}/bifrost"

@@ -10,6 +10,8 @@ zerops:
         - bin
     run:
       base: alpine/go@1.22
+      prepareCommands:
+        - sudo apk add --no-cache jq
       volume:
         hostname: localstorage
         mountPath: /mnt/localstorage
@@ -20,6 +22,7 @@ zerops:
       initCommands:
         - sudo mkdir -p /var/log /run /mnt/localstorage/bifrost/chromem && sudo chown -R zerops:zerops /mnt/localstorage/bifrost && sudo chmod -R 777 /var/log /run /mnt/localstorage/bifrost
         - test -f /mnt/localstorage/bifrost/config.json || (test -f /var/www/config.json && cp /var/www/config.json /mnt/localstorage/bifrost/config.json) || cp /var/www/config.example.json /mnt/localstorage/bifrost/config.json
+        - 'jq ".client //= {\"enforce_auth_on_inference\": false} | .governance //= {} | .governance.auth_config //= {\"is_enabled\": true, \"admin_username\": \"env.BIFROST_ADMIN_USERNAME\", \"admin_password\": \"env.BIFROST_ADMIN_PASSWORD\", \"disable_auth_on_inference\": false}" /mnt/localstorage/bifrost/config.json > /tmp/bifrost-config.json && mv /tmp/bifrost-config.json /mnt/localstorage/bifrost/config.json'
         - test -f /var/www/bin/bifrost && sudo cp /var/www/bin/bifrost /usr/local/bin/bifrost && sudo chmod +x /usr/local/bin/bifrost || (test -f /usr/local/bin/bifrost || bash /var/www/setup.sh /usr/local/bin)
       envVariables:
         PORT: "8080"
@@ -29,7 +32,9 @@ zerops:
         PG_USER: ${database_user}
         PG_PASSWORD: ${database_password}
         PG_DATABASE: ${database_dbName}
-        DEEPSEEK_PRO_KEY: ${DEEPSEEK_API_KEY}
+        FREELLMAPI_UNIFIED_KEY: ${FREELLMAPI_CLIENT_KEY}
+        BIFROST_VIRTUAL_KEY: ${BIFROST_MASTER_VK}
+        # DEEPSEEK_API_KEY, BIFROST_ADMIN_USERNAME, BIFROST_ADMIN_PASSWORD are inherited directly from Project Shared Vault
       start: sh -c 'until nc -z "$PG_HOST" "$PG_PORT"; do sleep 1; done; exec /usr/local/bin/bifrost -app-dir /mnt/localstorage/bifrost -port 8080 -host 0.0.0.0'
       healthCheck:
         httpGet:

@@ -5,6 +5,33 @@
     "port": 8080,
     "host": "0.0.0.0"
   },
+  "client": {
+    "enforce_auth_on_inference": false
+  },
+  "config_store": {
+    "enabled": true,
+    "type": "postgres",
+    "config": {
+      "host": "env.PG_HOST",
+      "port": "5432",
+      "user": "env.PG_USER",
+      "password": "env.PG_PASSWORD",
+      "db_name": "env.PG_DATABASE",
+      "ssl_mode": "disable"
+    }
+  },
+  "logs_store": {
+    "enabled": true,
+    "type": "postgres",
+    "config": {
+      "host": "env.PG_HOST",
+      "port": "5432",
+      "user": "env.PG_USER",
+      "password": "env.PG_PASSWORD",
+      "db_name": "env.PG_DATABASE",
+      "ssl_mode": "disable"
+    }
+  },
   "vector_store": {
     "enabled": true,
     "type": "chromem",
@@ -72,6 +99,12 @@
     }
   },
   "governance": {
+    "auth_config": {
+      "is_enabled": true,
+      "admin_username": "env.BIFROST_ADMIN_USERNAME",
+      "admin_password": "env.BIFROST_ADMIN_PASSWORD",
+      "disable_auth_on_inference": false
+    },
     "virtual_keys": [
       {
         "id": "vk-production-main",
