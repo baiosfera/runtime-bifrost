@@ -33,7 +33,7 @@
     "enabled": true,
     "type": "chromem",
     "config": {
-      "path": "/var/www/chromem",
+      "path": "/mnt/localstorage/bifrost/chromem",
       "compress": true
     }
   },

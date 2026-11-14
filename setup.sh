@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BIFROST_VERSION="v2.2.3"
+BIFROST_VERSION="v2.3.0"
 TARGET_DIR="${1:-/usr/local/bin}"
 
 echo "==> [Bifrost Setup] Installing Maxim AI Bifrost Gateway (${BIFROST_VERSION})..."
