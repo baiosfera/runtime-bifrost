@@ -34,7 +34,10 @@ zerops:
         PG_DATABASE: ${database_dbName}
         FREELLMAPI_UNIFIED_KEY: ${FREELLMAPI_CLIENT_KEY}
         BIFROST_VIRTUAL_KEY: ${BIFROST_MASTER_VK}
-        # DEEPSEEK_API_KEY, BIFROST_ADMIN_USERNAME, BIFROST_ADMIN_PASSWORD are inherited directly from Project Shared Vault
+        BIFROST_ADMIN_USERNAME: ${BIFROST_ADMIN_USER_SECRET}
+        BIFROST_ADMIN_PASSWORD: ${BIFROST_ADMIN_PASS_SECRET}
+        BIFROST_ENCRYPTION_KEY: ${BIFROST_ENC_KEY_SECRET}
+        # DEEPSEEK_API_KEY is inherited from Project Shared Vault
       start: sh -c 'until nc -z "$PG_HOST" "$PG_PORT"; do sleep 1; done; exec /usr/local/bin/bifrost -app-dir /mnt/localstorage/bifrost -port 8080 -host 0.0.0.0'
       healthCheck:
         httpGet:
