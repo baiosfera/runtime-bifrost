@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.getbifrost.ai/schema",
-  "version": 2,
+  "encryption_key": "env.BIFROST_ENCRYPTION_KEY",
   "server": {
     "port": 8080,
     "host": "0.0.0.0"
@@ -47,6 +47,7 @@
       "config": {
         "dimension": 1,
         "ttl": 86400,
+        "threshold": 0.8,
         "vector_store_namespace": "BifrostLocalCache",
         "default_cache_key": "production-semantic-cache",
         "cache_by_model": true,
@@ -70,10 +71,10 @@
       "network_config": {
         "base_url": "http://freellmapi:3001",
         "allow_private_network": true,
-        "default_request_timeout_in_seconds": 3,
-        "max_retries": 1,
-        "retry_backoff_initial": "300ms",
-        "retry_backoff_max": "1s"
+        "default_request_timeout_in_seconds": 120,
+        "max_retries": 2,
+        "retry_backoff_initial": 300,
+        "retry_backoff_max": 1000
       }
     },
     "deepseek": {
@@ -82,19 +83,14 @@
           "name": "deepseek-pro-commercial",
           "value": "env.DEEPSEEK_API_KEY",
           "models": ["*"],
-          "aliases": {
-            "deepseek-chat": "deepseek-v4-pro",
-            "deepseek-coder": "deepseek-v4-pro",
-            "deepseek-reasoner": "deepseek-v4-pro"
-          },
           "weight": 1.0
         }
       ],
       "network_config": {
-        "default_request_timeout_in_seconds": 120,
+        "default_request_timeout_in_seconds": 300,
         "max_retries": 3,
-        "retry_backoff_initial": "500ms",
-        "retry_backoff_max": "3s"
+        "retry_backoff_initial": 500,
+        "retry_backoff_max": 3000
       }
     }
   },
@@ -132,23 +128,34 @@
     ],
     "routing_rules": [
       {
-        "id": "rule-coding-and-reasoning-to-deepseek",
-        "name": "Route Coding, Complex Reasoning & Pro Tier Directly to DeepSeek",
-        "cel_expression": "model.contains('deepseek') || model.contains('code') || model.contains('reason') || headers['x-tier'] == 'production' || headers['x-routing-tier'] == 'pro'",
+        "id": "rule-explicit-pro-override",
+        "name": "Explicit Pro Override to DeepSeek Only When Requested",
+        "cel_expression": "headers['x-force-deepseek'] == 'true' || headers['x-routing-tier'] == 'pro' || headers['x-tier'] == 'pro' || headers['x-tier'] == 'production' || model.startsWith('deepseek')",
         "targets": [
           {
             "provider": "deepseek",
             "weight": 1.0
           }
         ],
-        "fallbacks": [
-          "freellmapi"
-        ],
+        "fallbacks": ["freellmapi"],
         "priority": 0
       },
       {
-        "id": "rule-freellm-zero-cost-priority",
-        "name": "Prioritize FreeLLMAPI with Paid Commercial Failover",
+        "id": "rule-freellm-opt-in-paid-fallback",
+        "name": "FreeLLMAPI Primary with Opt-In DeepSeek Fallback Only",
+        "cel_expression": "headers['x-allow-paid-fallback'] == 'true'",
+        "targets": [
+          {
+            "provider": "freellmapi",
+            "weight": 1.0
+          }
+        ],
+        "fallbacks": ["deepseek"],
+        "priority": 1
+      },
+      {
+        "id": "rule-freellm-zero-cost-strict",
+        "name": "Default Zero-Cost Routing Strictly to FreeLLMAPI",
         "cel_expression": "true",
         "targets": [
           {
@@ -156,10 +163,8 @@
             "weight": 1.0
           }
         ],
-        "fallbacks": [
-          "deepseek"
-        ],
-        "priority": 1
+        "fallbacks": [],
+        "priority": 2
       }
     ]
   }
